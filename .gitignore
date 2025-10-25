@@ -36,7 +36,6 @@ pip-wheel-metadata/
 Thumbs.db
 
 *.jpg
-/models/
 /tfjs models(v2)/
 /RAW DATA_CLEAN/
 /BACKUP MODELS/
