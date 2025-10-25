@@ -1,0 +1,43 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+isl-env/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Jupyter / data
+.ipynb_checkpoints/
+*.sqlite3
+*.db
+*.npy
+
+# Logs / dumps
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+*.jpg
+/models/
+/tfjs models(v2)/
+/RAW DATA_CLEAN/
+/BACKUP MODELS/
+/Basic Model (MLP)/RAW Images/

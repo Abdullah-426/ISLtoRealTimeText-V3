@@ -1,0 +1,452 @@
+ISL Project - Learnings and Steps (End-to-End Log)
+==================================================
+
+Project Goal
+------------
+Build a real-time Indian Sign Language (ISL) → Text translator that:
+- Uses webcam + MediaPipe to track hands.
+- Recognizes A–Z, 0–9, and a blank (whitespace) class.
+- Provides a stable, user-friendly GUI with hold-to-commit and confidence smoothing.
+
+
+Timeline / Major Milestones
+---------------------------
+1) Iteration-0: Environment Setup on Windows (VS Code)
+   - Created Python venv, handled Windows PowerShell execution policy and long-path issues.
+   - Installed CPU TensorFlow (2.17.1) + supporting libraries.
+
+2) Iteration-1: CNN-based Approach on Images (128x128 grayscale)
+   - Initially tried CNN training on frame crops.
+   - Faced problems: unstable performance, heavy augmentation collapse, GPU unavailability, and data variability across users/cameras.
+
+3) Iteration-2: Switch to Keypoints (MediaPipe Hands)
+   - Extracted 2-hand (21 landmarks each) 3D keypoints.
+   - Flattened to 126-dim vectors (left-hand 63 + right-hand 63).
+   - Built a robust MLP model with wrist-centered, scale-invariant normalization and presence flags.
+
+4) Dataset Prep & Splitting
+   - Standardized dataset structure: MP_Dataset/{class}/.npy files.
+   - Implemented a split script with 80/20 train-test or train/val/test as needed.
+   - Added logic to detect 2-hand classes: only keep samples with both hands present.
+   - Keep zero-hand samples only for ‘blank’ class.
+
+5) Training Fixes & Augmentation Lessons
+   - Baseline (no augmentation) reached >95–99% test accuracy.
+   - Heavy augmentation initially destroyed accuracy → replaced with light, physically plausible augmentations (scale/shift tied to wrist).
+   - Introduced class weights and normalization.
+
+6) Real-time App
+   - Designed resizable GUI with consistent aspect ratio.
+   - Integrated MediaPipe detection; extracted keypoints live.
+   - Implemented EMA smoothing, hold-to-commit, and cooldown.
+   - Solved Keras model Lambda deserialization issues by registering custom functions and using `safe_mode=False`.
+
+
+System & Tools (Final Stable Setup)
+-----------------------------------
+- OS: Windows 10/11 (VS Code)
+- Python: 3.11.x
+- TensorFlow: 2.17.1 (CPU build)
+- MediaPipe: 0.10.21
+- scikit-learn: 1.7.2
+- OpenCV: 4.11.0.86
+- NumPy: 1.26.4
+- Matplotlib, pandas, tqdm (for diagnostics)
+- Hardware: CPU-only (RTX 4060 not used for TF-GPU; Intel build detection shown).
+
+
+Environment Setup (Reproduce)
+-----------------------------
+1) Create & activate venv (PowerShell):
+   - python -m venv isl-env
+   - Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   - .\isl-env\Scripts\Activate.ps1
+
+2) Install packages:
+   - pip install --upgrade pip
+   - pip install "tensorflow==2.17.1" numpy==1.26.4 opencv-python mediapipe scikit-learn matplotlib pandas tqdm
+
+3) Windows long path fix (Admin PowerShell if needed):
+   - Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Type DWord -Value 1
+
+4) Check TensorFlow:
+   - python -c "import tensorflow as tf; print('TF:', tf.__version__, 'GPUs:', tf.config.list_physical_devices('GPU'))"
+
+Expected: TF 2.17.1, GPUs: []
+
+
+Data Collection & Labeling
+--------------------------
+- Input: images collected by 3 different people, across A–Z, 0–9, and blank.
+- Keypoint extraction using MediaPipe Hands → per image .npy with shape (42, 3) or (21, 3) per hand; flattened to (126,).
+
+Problems Seen:
+- For 2-hand classes, some samples only had one hand detected → created wrong “half-zero” vectors, harming training.
+- Blended sources (lighting/background/camera) introduced distribution shifts.
+
+Fixes:
+- During splitting: detect 2-hand classes by scanning a small sample set of .npy files; if a class has multiple examples with BOTH hands present, mark it as 2-hand class.
+- For 2-hand classes → keep only .npy files where both hands are present.
+- For 1-hand classes → keep only one-hand present samples.
+- Special handling for 'blank' → keep zero-hand samples.
+
+
+Dataset Split (Final)
+---------------------
+- Script: split_MP_DS.py
+- Options: 80/20 train/test; optional val.
+- Dedup, case-insensitive filters.
+- Filtering by hand presence:
+  - "blank": zero-hand only (keep).
+  - 2-hand class: keep only 2-hand samples.
+  - 1-hand class: keep only 1-hand samples.
+
+Command examples:
+- 80/20 train/test only:
+  python split_MP_DS.py --source "MP_Dataset" --out "MP_Dataset_Split" --train 0.8 --val 0.0 --test 0.2
+- 80/10/10 train/val/test:
+  python split_MP_DS.py --source "MP_Dataset" --out "MP_Dataset_Split" --train 0.8 --val 0.1 --test 0.1
+
+Manifest saved to MP_Dataset_Split/split_manifest.json (includes class stats and filtering summary).
+
+
+Modeling Attempts & Learnings
+-----------------------------
+[Attempt A] CNN on images (128x128 grayscale)
+- Pros: Intuitive; direct pixel-space learning.
+- Cons: Sensitive to background, lighting, camera differences; large data variability.
+- Training difficulties: heavy augmentation degraded performance; GPU not available; slow on CPU; inconsistent ROI crops.
+
+[Lesson]
+- Keypoint-based approach (pose landmarks) is more invariant, lightweight, and robust across users/cameras.
+
+[Attempt B] MLP on raw keypoints (126-dim)
+- Representation: two hands × (21 landmarks × 3 coords).
+- Preprocessing in the model: wrist-centered, scale-invariance normalization via Lambda layers + presence flags.
+- Architecture:
+  - Input: (126,)
+  - Reshape to (2,21,3)
+  - Lambda: wrist-centered & scale-normalized
+  - Flatten left/right → shared Dense encoder (256→128 with BN+ReLU+Dropout)
+  - Concatenate encodings + presence flags (2)
+  - Classifier head (256→128→softmax)
+- Loss/metrics: sparse categorical cross-entropy; accuracy + top-3 accuracy.
+- Normalization: tf.keras.layers.Normalization adapted on train.
+- Class weighting: balanced via sklearn to handle slight class count differences.
+
+Key Fixes:
+- KerasTensor misuse: Avoid calling raw tf ops outside layers on symbolic tensors; use Keras layers (Lambda) for derived ops.
+- EagerTensor.copy() errors: In tf.py_function, use `x_tf.numpy()` then copy→works.
+- Cardinality mismatch: Avoid passing multiple parallel input tensors of different lengths (fixed by consolidating data flow).
+- Augmentation meltdown: Too-strong augmentation changed distribution (e.g., large shifts/rotations), causing collapse. Switched to light, physically plausible augmentations tied to wrist-centered coordinates.
+
+
+Augmentation (Final Working)
+----------------------------
+- Type: Light, wrist-centered per-hand transforms.
+- X/Y scale: ±3–5%
+- X/Y shift: ±2–3% (clipped to [0,1])
+- Z-noise: small Gaussian (0.01–0.02)
+- Presence flags unchanged.
+- Applied only to train set via tf.data map with tf.py_function (and static shapes preserved).
+
+Results Summary
+---------------
+- Baseline (no augmentation):
+  [Earlier best] accuracy ~ 0.99 on test, top-3 ~ 0.997
+  Another run: ~0.958 test acc.
+  Very strong performance due to clean keypoint pipeline + filtered dataset.
+
+- Light augmentation (recommended):
+  accuracy ~ 0.97 test, top-3 ~ 0.997
+  Maintains generalization, avoids collapse.
+
+- Heavy augmentation (initial failed attempt):
+  accuracy collapsed to ~0.07; lessons learned about appropriate augmentation strength and distribution preservation.
+
+- Takeaway:
+  The wrist-centered, scale-invariant normalization + presence flags + shared-encoder MLP works very well on this dataset when the dataset is cleaned (hand-presence filtering) and augmentation is modest.
+
+
+Training Commands
+-----------------
+Baseline:
+  python train-model.py --split_root "MP_Dataset_Split" --epochs 20 --no_aug --save_dir "models/isl_keypoints_baseline"
+
+Light augmentation:
+  python train-model.py --split_root "MP_Dataset_Split" --epochs 120 --batch 128 --lr 1e-3 --save_dir "models/isl_wcs_raw_aug_light"
+
+Outputs:
+- best.keras (SavedModel .keras)
+- model.h5 (legacy)
+- labels.json
+- confusion_matrix.csv
+- training_log.csv
+
+
+Real-Time App
+-------------
+- Uses MediaPipe to extract 2-hand landmarks in real time.
+- Derives 126-d vector → model predicts class probabilities each frame.
+- EMA smoothing: reduces jitter and false flips.
+- Hold-to-commit: must keep a class stable >= HOLD_SECONDS to commit.
+- Cooldown: prevents repeated commits after a commit.
+- “blank” class commits a single space (and avoids spamming).
+- UI: resizable window (uniform scale; no aspect distortion), ROI preview, top-3 bars, FPS, hold ring indicator, typed text.
+
+Important Fixes:
+- Keras Lambda deserialization error (wcs_fn/pres_fn missing):
+  - Solution: register custom Lambda callbacks using:
+    @tf.keras.utils.register_keras_serializable(package="Custom", name="wcs_fn")
+    and load model with custom_objects + safe_mode=False.
+- UnboundLocalError with exception variable: fixed by properly scoping `e1`.
+
+App Run Command:
+  python app.py --model ".\models\isl_wcs_raw_aug_light\best.keras" --labels ".\models\isl_wcs_raw_aug_light\labels.json"
+
+Keys:
+- ESC: quit
+- SPACE: manual space
+- B/Backspace: delete last char
+- C: clear text
+- +/-: resize display (keeps aspect ratio)
+- R: reset smoothing
+- S: save transcript
+
+
+What Didn’t Work & Why
+----------------------
+- CNN on image crops:
+  - Too sensitive to environment; needs huge data and stable ROI.
+  - CPU training was slow; GPU not configured; initial input pipeline was noisy.
+- Heavy augmentation:
+  - Aggressive geometric noise broke the implicit distribution; model learned artifacts.
+- EagerTensor and Keras symbolic mixing:
+  - Using tf.* ops incorrectly outside Keras layers caused runtime errors.
+- Dataset contamination (two-hand vs one-hand mismatch):
+  - 2-hand classes with only 1-hand present corrupted the label distribution and confused the model.
+- Lambda deserialization:
+  - Custom Lambda functions need to be registered or loaded with `custom_objects` and `safe_mode=False`.
+
+
+Lessons Learned
+---------------
+1) Prefer keypoints over raw images for speed, invariance, and robustness on CPU.
+2) Keep augmentation weak and physically plausible; tie to the frame of reference (e.g., wrist-centered) for stability.
+3) Ensure dataset hygiene:
+   - Drop zero-hand samples except 'blank'.
+   - For 2-hand classes, ensure both hands are present; for 1-hand, only one hand present.
+4) Use Keras Functional with Lambda layers for TF ops; avoid mixing raw tf.* on KerasTensors outside layers.
+5) Serialize model with custom Lambdas carefully and load with registered functions.
+6) EMA smoothing + hold-to-commit + cooldown = usable UX.
+7) Start with baseline (no aug). Add light augmentation after sanity checks.
+
+
+How To Reproduce From Scratch
+-----------------------------
+1) Create venv & install deps:
+   python -m venv isl-env
+   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   .\isl-env\Scripts\Activate.ps1
+   pip install --upgrade pip
+   pip install "tensorflow==2.17.1" numpy==1.26.4 opencv-python mediapipe scikit-learn matplotlib pandas tqdm
+
+2) Prepare MP_Dataset with classes [0–9, A–Z, blank], .npy per sample with flattened 126-d vectors.
+
+3) Split with filtering:
+   python split_MP_DS.py --source "MP_Dataset" --out "MP_Dataset_Split" --train 0.8 --val 0.0 --test 0.2
+
+4) Train baseline:
+   python train-model.py --split_root "MP_Dataset_Split" --epochs 20 --no_aug --save_dir "models/isl_keypoints_baseline"
+
+5) Train with light augmentation:
+   python train-model.py --split_root "MP_Dataset_Split" --epochs 120 --batch 128 --lr 1e-3 --save_dir "models/isl_wcs_raw_aug_light"
+
+6) Run the app:
+   python app.py --model ".\models\isl_wcs_raw_aug_light\best.keras" --labels ".\models\isl_wcs_raw_aug_light\labels.json"
+
+
+Next Steps (Optional Enhancements)
+----------------------------------
+- Add live GUI sliders for thresholds & smoothing.
+- Class-specific thresholds (tweak ambiguous pairs).
+- TTS (say committed letter/word).
+- Autocorrect (on space).
+- TFLite export for faster inference.
+- Session logs (timestamps, top-k, typed events).
+- Packaging as a .exe (PyInstaller).
+
+
+Final State
+-----------
+- We have a clean, robust, CPU-friendly pipeline:
+  - Keypoint-based MLP with wrist-centered & scale-invariant normalization.
+  - Clean dataset split with 2-hand/1-hand/blank rules.
+  - Light, controlled augmentation.
+  - Real-time GUI with smoothing + hold-to-commit + cooldown.
+  - Stable accuracy ~0.96–0.99 depending on run and augmentation.
+
+This setup is maintainable and extendable for additional gestures or functions.
+
+
+---------------------------------------------------------------------------------------
+
+
+Here’s a clear, point-by-point explanation of both approaches we tried—**CNN on images** vs **Keypoint-based MLP**—what each does, why the first struggled, why we switched, and what we learned.
+
+---
+
+## Approach A — CNN on Images (Grayscale 128×128)
+
+**Idea**
+Train a convolutional neural network directly on cropped hand images (e.g., 128×128 grayscale). The CNN learns visual features (edges, textures, shapes) and maps them to classes (0–9, A–Z, blank).
+
+**Pipeline**
+
+1. **Data**: Raw RGB/Grayscale hand crops from webcam/images.
+2. **Preprocessing**: Grayscale conversion → Resize (128×128) → Normalize to \[0,1].
+3. **Model**: CNN stack (Conv → Pool → Dense → Softmax).
+4. **Training**: Supervised classification with categorical/sparse cross-entropy.
+5. **Augmentation (attempted)**: Rotations, translations, brightness/contrast, masking, etc.
+
+**Pros**
+
+* Intuitive: learns directly from pixel space (no reliance on hand landmark detection).
+* Can, in theory, capture subtle visual cues like finger shapes and appearances.
+* Works with any hand/pose if ROI is correct.
+
+**Cons (what went wrong)**
+
+* **ROI Instability**: Without perfect segmentation or very stable cropping, background and lighting changes affected features heavily.
+* **Data Variability**: Different users, cameras, backgrounds → distribution shifts; CNN needed much larger/cleaner dataset to generalize.
+* **Augmentation Collapse**: Aggressive augmentations (large rotations/shift/contrast changes) caused the distribution to drift too far → accuracy crashed.
+* **Compute Cost**: CNN on CPU was **slow to train** and iterate; GPU was not configured initially.
+* **Poor Robustness**: Model overly sensitive to camera position, lighting, clutter, and hand scale; inference consistency was poor.
+* **Real-time ROI**: Getting stable ROI for both hands in real time is non-trivial without an additional robust detector/segmenter (we later used MediaPipe anyway).
+
+**Result**
+
+* Inconsistent training and poor generalization in our setting.
+* Heavy augmentations worsened results; lighter augmentations helped a bit, but not enough.
+* **Conclusion**: Not ideal for our constraints (CPU-only, multi-user variability, quick iteration).
+
+---
+
+## Approach B — Keypoint-based MLP (2-hand, 21×3 each → 126-D)
+
+**Idea**
+Use **MediaPipe Hands** to extract 3D landmarks (x,y,z) for up to 21 keypoints per hand. Flatten into a 126-dim vector (Left(63) + Right(63)). Train a **lightweight MLP** on these semantic features.
+
+**Pipeline**
+
+1. **Data**: For each image/frame, run MediaPipe → extract 21×3 per hand.
+2. **Vectorization**: Concatenate to (126,) where missing hand is zeros.
+3. **Preprocessing in Model**:
+
+   * **Wrist-centered** coordinates (subtract wrist).
+   * **Scale invariance** (divide by max distance from wrist).
+   * **Presence flags** (2 values: left/right present).
+4. **Model**: Two shared hand encoders → concat encodings + flags → classifier.
+5. **Training**: Class-balanced; Normalization adapted on train; **light augmentation** only (small xy scale/shift, tiny z-noise).
+6. **Dataset Hygiene**:
+
+   * For **2-hand classes**, we kept only samples with both hands present.
+   * For **1-hand classes**, kept only one-hand present samples.
+   * For **blank**, kept zero-hand samples.
+
+**Pros**
+
+* **Invariant & Robust**: Wrist-centered + scale-normalized → less sensitive to camera, person, distance, background.
+* **Lightweight & Fast**: MLP on 126 dims is **fast on CPU** (both train & infer).
+* **Generalizes Well**: Keypoints capture the essence of the gesture; less noise from background.
+* **Easy Real-time Integration**: MediaPipe gives landmarks in real time; stable pipeline.
+
+**Cons / Gotchas**
+
+* **MediaPipe Dependence**: If MediaPipe fails to detect hands, vector is zeros → you must handle presence checks. (We do via presence flags & special handling for `blank`.)
+* **Model Serialization**: Using Keras Lambda for wrist/scale functions requires **custom serialization** (`@register_keras_serializable`) + `custom_objects` + `safe_mode=False` at load time.
+* **Dataset Filtering Required**: Mixed “2-hand class but single-hand sample” hurts training; filtering was crucial.
+* **Augmentation Sensitivity**: Still sensitive to too-strong augmentation; keep small, physically plausible transforms.
+
+**Result**
+
+* **Sanity (no aug)**: Acc \~0.96–0.99 depending on split; Top-3 \~0.995–0.997.
+* **Light Augmentation**: Acc \~0.97; Top-3 \~0.997.
+* **Heavy Aug** (initial attempt): collapsed performance \~0.07 (abandoned).
+* **Conclusion**: **Keypoints + light MLP** is the best fit for our constraints (CPU-only, real-time, multi-user).
+
+---
+
+## Why We Switched (CNN → Keypoints)
+
+**Main Reasons**
+
+1. **Robustness**: Keypoint space is much more invariant to background/lighting than pixels.
+2. **Compute**: MLP on 126 dims is far lighter than CNN on 128×128 images (especially on CPU).
+3. **Data Hygiene**: Landmark presence can be checked; we enforce correct samples per class (1-hand vs 2-hand vs blank).
+4. **Real-Time Needs**: MediaPipe + MLP runs smoothly at high FPS on CPU; simpler and less finicky than image-based segmentation.
+5. **Faster Iteration**: Training/debugging cycles are quicker, enabling rapid refinements (aug, architecture, dataset rules).
+
+---
+
+## Key Failures & Fixes Summarized
+
+**With CNN**
+
+* *Failure:* Unstable performance due to background/lighting variability.
+  *Fix:* Switch to semantic features (keypoints).
+
+* *Failure:* Augmentation collapse (aggressive transforms).
+  *Fix:* Reduce/replace with light, realistic augmentations (in keypoint space).
+
+* *Failure:* CPU training too slow; no GPU.
+  *Fix:* Use MLP on keypoints (very fast on CPU).
+
+**With Keypoints**
+
+* *Failure:* 2-hand class containing single-hand samples → confusion.
+  *Fix:* During splitting, detect 2-hand classes and drop single-hand samples; keep zero-hand only for `blank`.
+
+* *Failure:* Keras `Lambda` deserialization (custom functions like `wcs_fn`, `pres_fn`).
+  *Fix:* Register with `@tf.keras.utils.register_keras_serializable`, load with `custom_objects`, `safe_mode=False`.
+
+* *Failure:* Dataset cardinality mismatch during training (multiple input tensors).
+  *Fix:* Single input flow; compute presence flags within the graph; consistent shapes.
+
+* *Failure:* Over-augmentation even in keypoints.
+  *Fix:* Small per-hand xy scale/shift (±3–5%, ±2–3%), small z-noise; tied to wrist-centered coords.
+
+---
+
+## Practical Comparison (Quick View)
+
+| Aspect                | CNN on Images                      | Keypoint-based MLP                          |
+| --------------------- | ---------------------------------- | ------------------------------------------- |
+| Input                 | 128×128 grayscale image            | 126-dim vector (2×21×3)                     |
+| Sensitivity           | High (background, lighting, scale) | Low (wrist-centered, scale-invariant)       |
+| Compute (CPU)         | Heavy                              | Light (fast)                                |
+| Data Hygiene          | Hard to check                      | Easy (hand presence flags, filtering)       |
+| Augmentation          | Risky, can collapse                | Small, plausible aug works                  |
+| Real-time Integration | Needs strong ROI/segmentation      | Built-in landmarks → easy                   |
+| Accuracy Achieved     | Inconsistent                       | \~0.96–0.99 (sanity), \~0.97 with light aug |
+
+---
+
+## Lessons You Can Reuse
+
+* If you’re CPU-bound and your gestures are geometric (pose), **keypoints > pixels**.
+* Perform **dataset hygiene** based on **hand presence** per class before training.
+* Augment **lightly** and **semantically** (respect the natural variation of motion).
+* For Keras **Lambda**, always **register** custom functions and **load with safe\_mode=False**.
+* Add **EMA smoothing + hold-to-commit + cooldown** in the real-time UI for a stable UX.
+
+---
+
+**Bottom Line**
+We switched from **CNN-on-images** to **Keypoint-based MLP** because it is **faster**, **more robust**, and **easier to maintain** for our ISL use case. With proper dataset filtering and light augmentation, it gives **near-perfect accuracy** and smooth real-time behavior on CPU.
+
+
+ python .\app.py --model ".\models\isl_wcs_raw_aug_light_v2\best.keras" --labels ".\models\isl_wcs_raw_aug_light_v2\labels.json" --conf 0.60 --hold 3.0 --cooldown 0.8 --scale 0.85
+
+
+  python ".\Basic Model (MLP)\app.py" --model ".\models\isl_wcs_raw_aug_light_v2\best.keras" --labels ".\models\isl_wcs_raw_aug_light_v2\labels.json" --conf 0.60 --hold 3.0 --cooldown 0.8 --scale 0.85

@@ -1,0 +1,575 @@
+{
+  "seed": 42,
+  "ratios": {
+    "train": 0.8,
+    "val": 0.0,
+    "test": 0.2
+  },
+  "twohand_min_ratio": 0.25,
+  "twohand_min_abs": 10,
+  "classes": {
+    "0": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 300,
+        "both": 2,
+        "one": 298,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 238,
+        "val": 0,
+        "test": 60
+      }
+    },
+    "1": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 0,
+        "one": 397,
+        "zero": 3,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 317,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "2": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 3,
+        "one": 389,
+        "zero": 8,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 311,
+        "val": 0,
+        "test": 78
+      }
+    },
+    "3": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 0,
+        "one": 395,
+        "zero": 5,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 316,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "4": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 1,
+        "one": 397,
+        "zero": 2,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 317,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "5": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 397,
+        "both": 3,
+        "one": 394,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 315,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "6": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 1,
+        "one": 399,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 319,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "7": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 3,
+        "one": 397,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 317,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "8": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 0,
+        "one": 400,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 320,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "9": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 1,
+        "one": 399,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 319,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "A": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 398,
+        "one": 2,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 318,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "B": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 360,
+        "one": 38,
+        "zero": 2,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 288,
+        "val": 0,
+        "test": 72
+      }
+    },
+    "C": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 397,
+        "both": 2,
+        "one": 362,
+        "zero": 33,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 289,
+        "val": 0,
+        "test": 73
+      }
+    },
+    "D": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 386,
+        "one": 14,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 308,
+        "val": 0,
+        "test": 78
+      }
+    },
+    "E": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 372,
+        "one": 28,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 297,
+        "val": 0,
+        "test": 75
+      }
+    },
+    "F": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 368,
+        "one": 30,
+        "zero": 2,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 294,
+        "val": 0,
+        "test": 74
+      }
+    },
+    "G": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 385,
+        "one": 15,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 308,
+        "val": 0,
+        "test": 77
+      }
+    },
+    "H": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 262,
+        "one": 138,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 209,
+        "val": 0,
+        "test": 53
+      }
+    },
+    "I": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 0,
+        "one": 400,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 320,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "J": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 385,
+        "one": 15,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 308,
+        "val": 0,
+        "test": 77
+      }
+    },
+    "K": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 368,
+        "one": 31,
+        "zero": 1,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 294,
+        "val": 0,
+        "test": 74
+      }
+    },
+    "L": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 0,
+        "one": 396,
+        "zero": 4,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 316,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "M": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 316,
+        "one": 84,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 252,
+        "val": 0,
+        "test": 64
+      }
+    },
+    "N": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 379,
+        "one": 21,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 303,
+        "val": 0,
+        "test": 76
+      }
+    },
+    "O": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 416,
+        "both": 1,
+        "one": 415,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 332,
+        "val": 0,
+        "test": 83
+      }
+    },
+    "P": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 358,
+        "one": 42,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 286,
+        "val": 0,
+        "test": 72
+      }
+    },
+    "Q": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 391,
+        "one": 9,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 312,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "R": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 210,
+        "one": 190,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 168,
+        "val": 0,
+        "test": 42
+      }
+    },
+    "S": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 394,
+        "one": 6,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 315,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "T": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 395,
+        "one": 5,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 316,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "U": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 5,
+        "one": 389,
+        "zero": 6,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 311,
+        "val": 0,
+        "test": 78
+      }
+    },
+    "V": {
+      "type": "one_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 2,
+        "one": 364,
+        "zero": 34,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 291,
+        "val": 0,
+        "test": 73
+      }
+    },
+    "W": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 269,
+        "one": 131,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 215,
+        "val": 0,
+        "test": 54
+      }
+    },
+    "X": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 392,
+        "one": 8,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 313,
+        "val": 0,
+        "test": 79
+      }
+    },
+    "Y": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 397,
+        "one": 3,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 317,
+        "val": 0,
+        "test": 80
+      }
+    },
+    "Z": {
+      "type": "two_hand",
+      "counts_before": {
+        "total": 400,
+        "both": 383,
+        "one": 17,
+        "zero": 0,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 306,
+        "val": 0,
+        "test": 77
+      }
+    },
+    "blank": {
+      "type": "blank_zero_hand",
+      "counts_before": {
+        "total": 100,
+        "both": 0,
+        "one": 0,
+        "zero": 100,
+        "bad": 0
+      },
+      "counts_after_kept": {
+        "train": 80,
+        "val": 0,
+        "test": 20
+      }
+    }
+  },
+  "summary": {
+    "totals": {
+      "train": 10755,
+      "val": 0,
+      "test": 2704
+    },
+    "grand_total": 13459
+  }
+}

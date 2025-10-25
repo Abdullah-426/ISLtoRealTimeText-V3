@@ -1,0 +1,17 @@
+# === Core numeric + ML ===
+numpy==1.26.4
+scikit-learn==1.5.2
+pandas==2.2.3
+
+# TensorFlow (CPU build for Windows)
+tensorflow==2.18.0
+# Keras 3 ships via TF dependency; pin to a safe compatible range:
+keras>=3.5,<4
+
+# (Optional) plotting / logs
+matplotlib==3.9.2
+tqdm==4.66.5
+
+# NOTE:
+# - We are NOT installing tensorflowjs or TFLite extras here to avoid dependency backtracking.
+# - Exports are disabled by flags (--no_tfjs --no_tflite) while we iterate on training.

@@ -1,0 +1,51 @@
+Epoch 13/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 121s 159ms/step - accuracy: 0.9668 - loss: 0.6437 - top3: 0.9971 - val_accuracy: 0.1230 - val_loss: 5.9300 - val_top3: 0.2091 - learning_rate: 1.2500e-04
+Epoch 14/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 123s 162ms/step - accuracy: 0.9749 - loss: 0.6219 - top3: 0.9987 - val_accuracy: 0.0861 - val_loss: 6.4520 - val_top3: 0.1714 - learning_rate: 1.2500e-04
+Epoch 15/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 124s 164ms/step - accuracy: 0.9777 - loss: 0.6074 - top3: 0.9990 - val_accuracy: 0.1046 - val_loss: 6.1971 - val_top3: 0.1749 - learning_rate: 1.2500e-04
+Epoch 16/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 0s 158ms/step - accuracy: 0.9768 - loss: 0.6033 - top3: 0.99822025-10-06 01:04:19.760081: I tensorflow/core/framework/local_rendezvous.cc:405] Local rendezvous is aborting with status: OUT_OF_RANGE: End of sequence
+         [[{{node IteratorGetNext}}]]
+758/758 ━━━━━━━━━━━━━━━━━━━━ 125s 165ms/step - accuracy: 0.9762 - loss: 0.6006 - top3: 0.9986 - val_accuracy: 0.0861 - val_loss: 6.1003 - val_top3: 0.1801 - learning_rate: 1.2500e-04
+Epoch 17/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 125s 164ms/step - accuracy: 0.9822 - loss: 0.5839 - top3: 0.9996 - val_accuracy: 0.0975 - val_loss: 6.1701 - val_top3: 0.1793 - learning_rate: 1.2500e-04
+Epoch 18/60
+758/758 ━━━━━━━━━━━━━━━━━━━━ 126s 166ms/step - accuracy: 0.9868 - loss: 0.5697 - top3: 0.9997 - val_accuracy: 0.0852 - val_loss: 6.1556 - val_top3: 0.1740 - learning_rate: 6.2500e-05
+Traceback (most recent call last):
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\train_model_v2.py", line 644, in <module>
+    main()
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\train_model_v2.py", line 603, in main
+    model = tf.keras.models.load_model(best_path, compile=False)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\saving_api.py", line 189, in load_model
+    return saving_lib.load_model(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\saving_lib.py", line 365, in load_model
+    return _load_model_from_fileobj(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\saving_lib.py", line 442, in _load_model_from_fileobj    
+    model = _model_from_config(
+            ^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\saving_lib.py", line 431, in _model_from_config
+    model = deserialize_keras_object(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\serialization_lib.py", line 733, in deserialize_keras_object
+    instance = cls.from_config(inner_config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\models\model.py", line 660, in from_config
+    return functional_from_config(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\models\functional.py", line 558, in functional_from_config      
+    process_layer(layer_data)
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\models\functional.py", line 525, in process_layer
+    layer = serialization_lib.deserialize_keras_object(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\saving\serialization_lib.py", line 733, in deserialize_keras_object
+    instance = cls.from_config(inner_config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\layers\core\lambda_layer.py", line 191, in from_config
+    cls._raise_for_lambda_deserialization(safe_mode)
+  File "E:\Data Science Project\ISLtoRealTimeText-V3\isl-env\Lib\site-packages\keras\src\layers\core\lambda_layer.py", line 172, in _raise_for_lambda_deserialization
+    raise ValueError(
+ValueError: Requested the deserialization of a `Lambda` layer whose `function` is a Python lambda. This carries a potential risk of arbitrary code execution and thus it is disallowed by default. If you trust the source of the artifact, you can override this error by passing `safe_mode=False` to the loading function, or calling `keras.config.enable_unsafe_deserialization().
